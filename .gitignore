@@ -1,0 +1,50 @@
+# Custom
+notebooks/
+
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+
+# PyInstaller
+*.spec
+
+# Environment
+.env
+.venv/
+venv/
+ENV/
+env/
+
+# IDEs/editors
+.vscode/
+.idea/
+*.swp
+
+# Jupyter
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Tests
+.coverage
+.cache/
+
+# MyPy, Pytest, coverage, etc.
+.mypy_cache/
+.pytest_cache/
+coverage.xml
+
+# Logs
+*.log

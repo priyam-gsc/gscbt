@@ -1,0 +1,9 @@
+numpy
+pandas
+polars
+pyarrow
+requests
+dotenv
+python_calamine
+
+pytest
