@@ -23,7 +23,7 @@ setup(
         "License :: OSI Approved :: MIT License",
     ],
     package_data={
-        "gscbt": ["data/*.xlsx"]
+        "gscbt": ["config/*.xlsx"]
     },
     include_package_data=True,
 )
