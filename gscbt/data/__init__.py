@@ -1,4 +1,4 @@
-from .continuous import get_continuous
+from .continuous import get_continuous, get
 from .outright import get_outright
 from .spread import get_spread
 
