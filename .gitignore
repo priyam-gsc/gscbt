@@ -1,3 +1,10 @@
+# Ignore everything whose name begins with a dot
+.*
+
+# But still track these two dot-files:
+!.gitignore
+!.gitattributes
+
 # Custom
 notebooks/
 
