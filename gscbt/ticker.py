@@ -11,28 +11,6 @@ from gscbt.utils import PATH, Dotdict
 class Ticker:
     def _parse_iqfeed_excel_to_Ticker():
 
-        COLUMNS = [
-            "Product",
-            "Symbol",
-            "IQFeed symbol",
-            "Exchange",
-            "Data From Date",
-            "Asset Class",
-            "Product Group",
-            "Repeat",
-            "Currency Multiplier",
-            "Currency",
-            "Exchange rate",
-            "Dollar equivalent",
-            "Contract Months",
-            "Last Contract",
-            "Currency Tick Value",
-            "Cost in Ticks",
-            "Commission Cost",
-            "Trading Hours",
-            "Roll Offset",
-        ]
-
         # Load Excel file into a DataFrame
         # skip first row "IQ FEED SYMBOL MAPPING"
         try:
@@ -48,34 +26,27 @@ class Ticker:
         symbols = {}
         symbols_dict = {}
 
-        # Iterate through the rows of the DataFrame
-        for _, row in df.iterrows():
-            # you will be using class.
-            exchange = row.get("Exchange", None).lower()
-            symbol = row.get("Symbol", None).lower()
+        column_list = [
+            col.strip().replace(" ", "_").lower()
+            for col in df.columns.tolist()
+        ]
 
-            if exchange == None or symbol == None:
-                raise ValueError(f"[-] Ticker : Excel don't have Exchange and Symbol columns")
+        if "exchange" not in column_list or "symbol" not in column_list:
+            raise ValueError(f"[-] Ticker : Excel don't have Exchange and Symbol columns")
 
-            # Construct the dictionary structure for "Future" data
-            # Make all column a field
-            data = {
-                "type": "futures",  # custom added not part of excel file
-            }
+        for row in df.itertuples(index=False):
+            data = {"type": "futures"}
+            for column, val in zip(column_list, row):
+                data[column] = val
 
-            for column in COLUMNS:
-                key = column.lower().replace(" ", "_")
-                data[key] = row.get(column, None)
-            # Populate the nested dictionary with exchange and symbol
-            # "f" is used for futures
+            exchange = data["exchange"].lower()
+            symbol = data["symbol"].lower()
+
             tickers[exchange][symbol]["f"] = data
 
             # reverse map
-            symbols[row.get("Symbol")] = Dotdict(data)
-            symbols_dict[row.get("Symbol")] = data
-
-        # Convert defaultdict to normal dict before returning
-        # and normal dict to dotaccessdict(DotDict)
+            symbols[data["symbol"]] = Dotdict(data)
+            symbols_dict[data["symbol"]] = data    
 
         tickers = Dotdict(dict(tickers))
         return tickers, symbols, symbols_dict
