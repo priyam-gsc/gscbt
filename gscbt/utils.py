@@ -6,6 +6,10 @@ import requests
 import polars as pl
 from dotenv import load_dotenv
 
+class DEFAULT:
+    START_YEAR = 1950
+    START_DATE = "1950-01-01"
+
 class PATH:
     LOCAL_STORAGE = Path.home() / ".gscbt"
     ENV = LOCAL_STORAGE / ".env"
@@ -19,13 +23,17 @@ class API:
         print("format 'ipv4:port' for example = 123.0.0.1:8080")
         SERVER_IP_PORT = input("SERVER_IP_PORT = ")
         LOCAL_WIN_DIRECT_IQFEED_IP_PORT = input("LOCAL_WIN_DIRECT_IQFEED_IP_PORT = ")
+        HDB_IP_PORT = input("HDB_IP_PORT = ")
         with open(PATH.ENV, 'w') as f:
             f.write(f"SERVER_IP_PORT={SERVER_IP_PORT}\n")
             f.write(f"LOCAL_WIN_DIRECT_IQFEED_IP_PORT={LOCAL_WIN_DIRECT_IQFEED_IP_PORT}")
+            f.write(f"HDB_IP_PORT={HDB_IP_PORT}\n")
+
     
     load_dotenv(dotenv_path=PATH.ENV)
     SERVER_IP_PORT = os.getenv("SERVER_IP_PORT") 
     LOCAL_WIN_DIRECT_IQFEED_IP_PORT = os.getenv("LOCAL_WIN_DIRECT_IQFEED_IP_PORT")# replace  "your_ip:5675"
+    HDB_IP_PORT = os.getenv("HDB_IP_PORT")
     
     GET_USD_CONVERSION = f"http://{SERVER_IP_PORT}/api/v1/data/dollarequivalent"
     DOWNLOAD_MARKET_DATA = f"http://{SERVER_IP_PORT}/api/v1/data/download"
@@ -138,7 +146,7 @@ def download_file(
         params : dict = None, 
         timeout: int = 30, 
         allow_redirect: bool = False
-    ):
+    ) -> int:
     response = requests.get(
         url,
         params=params,
@@ -146,10 +154,12 @@ def download_file(
         timeout=timeout,
         allow_redirects=allow_redirect,
     )
-    response.raise_for_status()
 
-    with open(filename_with_path, "wb") as file:
-        file.write(response.content)
+    if response.status_code == 200:
+        with open(filename_with_path, "wb") as file:
+            file.write(response.content)
+    
+    return response.status_code
 
 def json_to_parquet(json_path : Path, parquet_path : Path = None):
     if parquet_path is None:

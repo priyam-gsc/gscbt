@@ -192,6 +192,32 @@ def move_contracts_to_next_valid_month(
     except:
         raise ValueError(f"[-] DataPipeline.move_contracts_to_next_valid_month Invalid contract value {contract}")
 
+def move_contracts_to_prev_valid_month(
+    contracts : list[str],
+) -> list[str]:
+    try:
+        moved_contracts = []
+        for contract in contracts:
+            sym = contract[:-3]
+            valid_months = Ticker.SYMBOLS[sym].contract_months
+            valid_months = valid_months.replace("-", "")
+
+            idx = valid_months.find(contract[-3])
+
+            if idx == -1:
+                raise 
+
+            if idx == 0:
+                contract = contract[:-3] + valid_months[-1]  + f"{(int(contract[-2:])-1)%100:02}"
+            else:
+                contract = contract[:-3] + valid_months[idx-1] + contract[-2:]
+
+            moved_contracts.append(contract)
+
+        return moved_contracts
+    except:
+        raise ValueError(f"[-] DataPipeline.move_contracts_to_prev_valid_month Invalid contract value {contract}")
+
 def move_contract_to_given_next_valid_month(
     contract : str,
     valid_months : str,

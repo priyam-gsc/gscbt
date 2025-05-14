@@ -1,9 +1,14 @@
 from datetime import datetime
 from pathlib import Path
 from enum import Enum, auto
-from concurrent.futures import ThreadPoolExecutor
 
-from gscbt.utils import (
+from .hdb_client import (
+    prep_hdb_key,
+    hdb_download,
+)
+
+from .utils import (
+    DEFAULT,
     PATH, 
     API, 
     Dotdict, 
@@ -20,6 +25,8 @@ class Cache:
         outright = auto()
 
     class Mode(Enum):
+        hdb = auto()
+        hdb_n_market_api = auto()
         market_api = auto()
         direct_iqfeed = auto()
 
@@ -57,7 +64,7 @@ class Cache:
         cache_datatype : Datatype, 
         cache_metadata : Metadata,
         cache_mode: Mode,
-    ):
+    ) -> bool:
         file_path = PATH.CACHE / ticker.exchange / ticker.symbol / ticker.type
         file_path /=  interval
         
@@ -69,39 +76,72 @@ class Cache:
         Path(file_path).mkdir(parents=True, exist_ok=True)
         filename = ticker.symbol + cache_metadata.filename_suffix
 
-        url = API.GET_IQFEED_DATA
-        params = {
-            "symbols": ticker.iqfeed_symbol + cache_metadata.symbol_suffix,
-            "start_date": ticker.data_from_date.strftime("%Y-%m-%d"),
-            "end_date": datetime.today().strftime("%Y-%m-%d"),
-            "type": "eod" if interval == "1d" else "ohlcv",
-            "duration": Interval.str_to_second(interval),
-        }
-
         path = file_path / Path(filename).with_suffix(".parquet")
-        if not path.exists():
-            if cache_mode == Cache.Mode.direct_iqfeed:
-                url = API.DIRECT_IQFEED_APIS
-                download_file(url, path, params)
+        if path.exists():
+            return True
 
-            else:
-                path = file_path / Path(filename).with_suffix(".json")
-                download_file(url, path, params)
+        hdb_flag = None      
+        if(
+            cache_mode == Cache.Mode.hdb or
+            cache_mode == Cache.Mode.hdb_n_market_api
+        ):       
+            # only historical data from hdb (data upto 31-12-2024 for any data)
+            hdb_key = prep_hdb_key(
+                interval, 
+                ticker.iqfeed_symbol + cache_metadata.symbol_suffix,
+                ticker.symbol + cache_metadata.symbol_suffix,
+            )
+            hdb_flag = hdb_download(
+                API.HDB_IP_PORT,
+                hdb_key,
+                path
+            )
+
+        if(
+            cache_mode == Cache.Mode.market_api or
+            (cache_mode == Cache.Mode.hdb_n_market_api and hdb_flag != 1)
+        ):
+            path = file_path / Path(filename).with_suffix(".json")
+            url = API.GET_IQFEED_DATA
+            params = {
+                "symbols": ticker.iqfeed_symbol + cache_metadata.symbol_suffix,
+                "start_date": DEFAULT.START_DATE,
+                "end_date": datetime.today().strftime("%Y-%m-%d"),
+                "type": "eod" if interval == "1d" else "ohlcv",
+                "duration": Interval.str_to_second(interval),
+            }
+
+            status_code = download_file(url, path, params)
+            if status_code == 200:
                 json_to_parquet(path)
                 remove_file(path)
+
+        elif cache_mode == Cache.Mode.direct_iqfeed:
+            url = API.DIRECT_IQFEED_APIS
+            params = {
+                "symbols": ticker.iqfeed_symbol + cache_metadata.symbol_suffix,
+                "start_date":DEFAULT.START_DATE,
+                "end_date": datetime.today().strftime("%Y-%m-%d"),
+                "type": "eod" if interval == "1d" else "ohlcv",
+                "duration": Interval.str_to_second(interval),
+            }
+            download_file(url, path, params)
+        else:
+            pass
+
+        if path.exists():
+            return True
+        else:
+            return False 
 
     def outrights(
         tickers : list[Dotdict],
         intervals : list[str],
         start_year : int = None,
         end_year : int = None,
-        cache_mode: Mode = Mode.market_api,
-        max_workers : int = 1,
+        cache_mode: Mode = Mode.hdb_n_market_api,
         verbose : bool = False
     ):
-        if cache_mode == Cache.Mode.market_api:
-            max_workers = 1
-
         isStartYearNone = False
         if start_year == None:
             isStartYearNone = True
@@ -109,58 +149,56 @@ class Cache:
         if end_year == None:
             end_year = datetime.today().year
 
+
         for ticker in tickers:
-            valid_months = ticker.contract_months.replace("-", "")
+            rev_valid_months = ticker.contract_months.replace("-", "")[::-1]
     
             if isStartYearNone:
-                start_year = ticker.data_from_date.year
+                start_year = DEFAULT.START_YEAR
             
             for interval in intervals:
-                with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                    for year in range(start_year, end_year+1):
-                        for month in valid_months:
-                            executor.submit(
-                                Cache.cache,
-                                ticker,
-                                interval,
-                                Cache.Datatype.outright,
-                                Cache.Metadata.create_outright(month, f"{year%100:02}"),
-                                cache_mode
-                            )
+                isCached = False
+                for year in range(end_year, start_year-1, -1):
+                    for month in rev_valid_months:
+                        isCached = Cache.cache(
+                            ticker,
+                            interval,
+                            Cache.Datatype.outright,
+                            Cache.Metadata.create_outright(month, f"{year%100:02}"),
+                            cache_mode
+                        )
 
-                if verbose:
-                    print(f"{ticker.symbol} for {interval} cached.")        
+                        if not isCached:
+                            break
+                    if not isCached:
+                        break    
+
+            if verbose:
+                print(f"{ticker.symbol} for {interval} cached.")        
 
     def continuous(
         tickers : list[Dotdict],
         intervals : list[str],
-        cache_mode: Mode = Mode.market_api,
-        max_workers : int = 1,
+        cache_mode: Mode = Mode.hdb_n_market_api,
         verbose : bool = False
     ):
-        if cache_mode == Cache.Mode.market_api:
-            max_workers = 1
-
         for ticker in tickers:
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                for interval in intervals:
-                    executor.submit(
-                        Cache.cache,
-                        ticker,
-                        interval,
-                        Cache.Datatype.underlying,
-                        Cache.Metadata.create_underlying(),
-                        cache_mode
-                    )
+            for interval in intervals:
+                Cache.cache(
+                    ticker,
+                    interval,
+                    Cache.Datatype.underlying,
+                    Cache.Metadata.create_underlying(),
+                    cache_mode
+                )
 
-                    executor.submit(
-                        Cache.cache,
-                        ticker,
-                        interval,
-                        Cache.Datatype.underlying,
-                        Cache.Metadata.create_back_adjusted(),
-                        cache_mode
-                    )
+                Cache.cache(
+                    ticker,
+                    interval,
+                    Cache.Datatype.underlying,
+                    Cache.Metadata.create_back_adjusted(),
+                    cache_mode
+                )
 
             if verbose:
                 print(f"{ticker.symbol} cached.")   

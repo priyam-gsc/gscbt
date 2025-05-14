@@ -1,5 +1,4 @@
 import pandas as pd
-from requests import HTTPError
 
 from gscbt.cache import Cache
 from gscbt.expression_utils import extract_sym_month_year_from_contract
@@ -10,7 +9,7 @@ def get_outright(
     contract : str ,
     ohlcv : str,
     interval : str = "1d",
-    cache_mode: Cache.Mode = Cache.Mode.market_api,
+    cache_mode: Cache.Mode = Cache.Mode.hdb_n_market_api,
 ) -> pd.DataFrame:
 
     df = pd.DataFrame()
@@ -21,13 +20,16 @@ def get_outright(
         path /= contract + ".parquet"
         
         if not path.exists():
-            Cache.cache(
+            isCache = Cache.cache(
                 ticker,
                 interval,
                 Cache.Datatype.outright,
                 Cache.Metadata.create_outright(month, year),
                 cache_mode
             )
+
+            if not isCache:
+                return df, False
 
         column_list = ["timeutc"]
         if "o" in ohlcv:
@@ -48,7 +50,5 @@ def get_outright(
 
         return df, True
     
-    except HTTPError:
-        return df, False
     except Exception as e:
         raise Exception("[-] DataPipeline.get_outright : ERROR") from e

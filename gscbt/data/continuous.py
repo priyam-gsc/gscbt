@@ -14,7 +14,7 @@ def get(
     start : str = None,
     end : str = None,
     interval : str = "1d",
-    cache_mode : Cache.Mode = Cache.Mode.market_api,
+    cache_mode : Cache.Mode = Cache.Mode.hdb_n_market_api,
 ):
     df = pd.DataFrame()
 
@@ -42,7 +42,7 @@ def get_continuous(
     start : str = None,
     end : str = None,
     interval : str = "1d",
-    cache_mode : Cache.Mode = Cache.Mode.market_api,
+    cache_mode : Cache.Mode = Cache.Mode.hdb_n_market_api,
 ):
     cache_datatype = Cache.Datatype.underlying
     cache_metadata = Cache.Metadata.create_underlying()
