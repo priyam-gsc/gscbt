@@ -20,6 +20,8 @@ class PATH:
 
 class API:
     if not PATH.ENV.exists():
+        Path(PATH.LOCAL_STORAGE).mkdir(parents=True, exist_ok=True)
+        
         print("format 'ipv4:port' for example = 123.0.0.1:8080")
         SERVER_IP_PORT = input("SERVER_IP_PORT = ")
         LOCAL_WIN_DIRECT_IQFEED_IP_PORT = input("LOCAL_WIN_DIRECT_IQFEED_IP_PORT = ")
