@@ -28,7 +28,7 @@ class API:
         HDB_IP_PORT = input("HDB_IP_PORT = ")
         with open(PATH.ENV, 'w') as f:
             f.write(f"SERVER_IP_PORT={SERVER_IP_PORT}\n")
-            f.write(f"LOCAL_WIN_DIRECT_IQFEED_IP_PORT={LOCAL_WIN_DIRECT_IQFEED_IP_PORT}")
+            f.write(f"LOCAL_WIN_DIRECT_IQFEED_IP_PORT={LOCAL_WIN_DIRECT_IQFEED_IP_PORT}\n")
             f.write(f"HDB_IP_PORT={HDB_IP_PORT}\n")
 
     
