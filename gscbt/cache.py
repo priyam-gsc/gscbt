@@ -18,6 +18,12 @@ from .utils import (
     remove_file,
 )
 
+def is_year_historical(year : int) -> bool:
+    if(24 < year and year < 50):
+        return False
+    
+    return True
+
 class Cache:
     class Datatype(Enum):
         underlying = auto()
@@ -82,8 +88,9 @@ class Cache:
 
         hdb_flag = None      
         if(
-            cache_mode == Cache.Mode.hdb or
-            cache_mode == Cache.Mode.hdb_n_market_api
+            (cache_mode == Cache.Mode.hdb or
+            cache_mode == Cache.Mode.hdb_n_market_api) and
+            is_year_historical(int(cache_metadata.year))
         ):       
             # only historical data from hdb (data upto 31-12-2024 for any data)
             hdb_key = prep_hdb_key(
