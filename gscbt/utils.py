@@ -4,7 +4,7 @@ import os
 
 import requests
 import polars as pl
-from dotenv import load_dotenv
+from dotenv import load_dotenv, dotenv_values, set_key
 
 class DEFAULT:
     START_YEAR = 1950
@@ -16,20 +16,35 @@ class PATH:
     PACKAGE_DIR = Path(__file__).parent
     LOCAL_DATA = PACKAGE_DIR / "config"
     CACHE = LOCAL_STORAGE / "cache"
-    IQFEED_EXCEL = LOCAL_DATA / "iqfeed_data.xlsx"
+    IQFEED_EXCEL = LOCAL_STORAGE / "iqfeed_data.xlsx"
+    IQFEED_EXCEL_LOCAL = LOCAL_DATA / "iqfeed_data.xlsx"
 
 class API:
+    REQUIRED_KEYS = [
+        "SERVER_IP_PORT",
+        "LOCAL_WIN_DIRECT_IQFEED_IP_PORT",
+        "HDB_IP_PORT"
+    ]
+    if PATH.ENV.exists():
+        env_values = dotenv_values(dotenv_path=PATH.ENV)
+        for key in REQUIRED_KEYS:
+            if not env_values.get(key):
+                PATH.ENV.unlink()
+                break
+
     if not PATH.ENV.exists():
         Path(PATH.LOCAL_STORAGE).mkdir(parents=True, exist_ok=True)
         
         print("format 'ipv4:port' for example = 123.0.0.1:8080")
-        SERVER_IP_PORT = input("SERVER_IP_PORT = ")
-        LOCAL_WIN_DIRECT_IQFEED_IP_PORT = input("LOCAL_WIN_DIRECT_IQFEED_IP_PORT = ")
-        HDB_IP_PORT = input("HDB_IP_PORT = ")
-        with open(PATH.ENV, 'w') as f:
-            f.write(f"SERVER_IP_PORT={SERVER_IP_PORT}\n")
-            f.write(f"LOCAL_WIN_DIRECT_IQFEED_IP_PORT={LOCAL_WIN_DIRECT_IQFEED_IP_PORT}\n")
-            f.write(f"HDB_IP_PORT={HDB_IP_PORT}\n")
+
+        for key in REQUIRED_KEYS:
+            value = input(f"{key} = ").strip()
+            
+            while not value:
+                print(f"{key} cannot be empty.")
+                value = input(f"{key} = ").strip()
+            
+            set_key(str(PATH.ENV), key, value)
 
     
     load_dotenv(dotenv_path=PATH.ENV)
