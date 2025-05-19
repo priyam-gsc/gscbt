@@ -1,4 +1,5 @@
 from collections import defaultdict
+import shutil 
 
 import pandas as pd
 
@@ -9,6 +10,11 @@ from gscbt.utils import PATH, Dotdict
 # this function return ticker with it's metadata in dictionary format
 
 class Ticker:
+    def _mv_iqfeed_excel_to_local_storage():
+        if not PATH.IQFEED_EXCEL.exists():
+            PATH.LOCAL_STORAGE.mkdir(parents=True, exist_ok=True)
+            shutil.copy(PATH.IQFEED_EXCEL_LOCAL, PATH.IQFEED_EXCEL)
+
     def _parse_iqfeed_excel_to_Ticker():
 
         # Load Excel file into a DataFrame
@@ -51,6 +57,7 @@ class Ticker:
         tickers = Dotdict(dict(tickers))
         return tickers, symbols, symbols_dict
     
+    _mv_iqfeed_excel_to_local_storage()
     TICKERS, SYMBOLS, SYMBOLS_DICT = _parse_iqfeed_excel_to_Ticker()
 
 if __name__ == "__main__":
