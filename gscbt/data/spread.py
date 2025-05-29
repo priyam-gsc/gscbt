@@ -182,10 +182,10 @@ def get_spread(
                     elif roll_date > temp_date:
                         roll_date = temp_date
 
-            start_crop = None
-            if(len(df_spread_list) == 0):
-                start_crop = roll_date - pd.DateOffset(years=1)
-                final_df = final_df.loc[start_crop:]
+            # start_crop = None
+            # if(len(df_spread_list) == 0):
+            #     start_crop = roll_date - pd.DateOffset(years=1)
+            #     final_df = final_df.loc[start_crop:]
 
             df_spread_list.append(final_df.loc[:roll_date])
 
@@ -338,10 +338,10 @@ def get_spread(
                     elif roll_date > temp_date:
                         roll_date = temp_date
 
-            start_crop = None
-            if(len(df_spread_list) == 0):
-                start_crop = roll_date - pd.DateOffset(months=1)
-                final_df = final_df.loc[start_crop:]
+            # start_crop = None
+            # if(len(df_spread_list) == 0):
+            #     start_crop = roll_date - pd.DateOffset(months=1)
+            #     final_df = final_df.loc[start_crop:]
 
             df_spread_list.append(final_df.loc[:roll_date])
 
