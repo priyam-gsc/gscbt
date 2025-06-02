@@ -186,7 +186,7 @@ def get_spread(
             # if(len(df_spread_list) == 0):
             #     start_crop = roll_date - pd.DateOffset(years=1)
             #     final_df = final_df.loc[start_crop:]
-
+            final_df["roll_date"] = roll_date
             df_spread_list.append(final_df.loc[:roll_date])
 
         # perform join to yearwise spread
@@ -342,7 +342,7 @@ def get_spread(
             # if(len(df_spread_list) == 0):
             #     start_crop = roll_date - pd.DateOffset(months=1)
             #     final_df = final_df.loc[start_crop:]
-
+            final_df["roll_date"] = roll_date
             df_spread_list.append(final_df.loc[:roll_date])
 
             itr_contracts = move_contracts_to_prev_valid_month(itr_contracts)
@@ -401,7 +401,7 @@ def get_spread(
         pass
 
     df = df.loc[start:end]
-
+    df["days_to_roll"] = df.roll_date - df.index
     # back_adjust data to end date
     # if back_adjusted:
     #     udf = get_spread(
