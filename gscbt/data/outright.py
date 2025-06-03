@@ -51,4 +51,5 @@ def get_outright(
         return df, True
     
     except Exception as e:
+        print(str(e))
         raise Exception("[-] DataPipeline.get_outright : ERROR") from e

@@ -19,8 +19,8 @@ BYTEORDER  = sys.byteorder  # 'little' or 'big'
 # '@i' = C int, '@l' = C long, native order & alignment
 _pack_int  = struct.Struct('@i').pack
 _unpack_int = struct.Struct('@i').unpack
-_pack_long = struct.Struct('@l').pack
-_unpack_long = struct.Struct('@l').unpack
+_pack_long_long = struct.Struct('@q').pack
+_unpack_long_long = struct.Struct('@q').unpack
 
 
 def prep_hdb_key(*args) -> str:
@@ -48,7 +48,7 @@ def hdb_download(
                 return flag
 
             raw_size = sock.recv(SIZE_LONG)
-            size = _unpack_long(raw_size)[0]
+            size = _unpack_long_long(raw_size)[0]
 
             bytes_recd = 0
             if size > 0:
