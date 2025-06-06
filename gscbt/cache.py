@@ -88,9 +88,10 @@ class Cache:
 
         hdb_flag = None      
         if(
+            cache_datatype == Cache.Datatype.outright and
             (cache_mode == Cache.Mode.hdb or
             cache_mode == Cache.Mode.hdb_n_market_api) and
-            is_year_historical(int(cache_metadata.year))
+            is_year_historical(int(cache_metadata.year)) 
         ):       
             # only historical data from hdb (data upto 31-12-2024 for any data)
             hdb_key = prep_hdb_key(
