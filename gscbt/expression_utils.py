@@ -11,6 +11,7 @@ def extract_sym_month_year_from_contract(
 
 def extract_contracts_multipliers_operators( exp: str):
     try:
+        exp = exp.replace(" ", "")
         contracts = []
         multipliers = []
         operators = []
