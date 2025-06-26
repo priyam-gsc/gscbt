@@ -7,3 +7,8 @@ from .spread_instrument import (
     DataType,
     SpreadInstrument,
 )
+
+from .synthetic_builder_wrappers import(
+    sbw_get_contractwise,
+    sbw_get_spreadwise,
+)
