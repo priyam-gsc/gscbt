@@ -16,7 +16,7 @@ from .utils import (
 )
 
 
-class Spread:
+class BacktestEngine:
     # pre-req
     #   timeseries - UTC timezone
     #              - Close price
