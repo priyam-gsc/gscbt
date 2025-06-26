@@ -60,5 +60,12 @@ class Ticker:
     _mv_iqfeed_excel_to_local_storage()
     TICKERS, SYMBOLS, SYMBOLS_DICT = _parse_iqfeed_excel_to_Ticker()
 
+
+def get_instrument_contract_months(instrument : str) -> str:
+    months = Ticker.SYMBOLS[instrument].contract_months
+    months = months.replace('-', '')
+    return months
+
+
 if __name__ == "__main__":
     pass
