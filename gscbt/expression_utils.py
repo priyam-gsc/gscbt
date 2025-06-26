@@ -9,6 +9,7 @@ def extract_sym_month_year_from_contract(
 ) -> tuple[str, str, str]:
     return contract[:-3], contract[-3], contract[-2:]
 
+
 def extract_contracts_multipliers_operators( exp: str):
     try:
         exp = exp.replace(" ", "")
@@ -77,6 +78,17 @@ def extract_contracts_multipliers_operators( exp: str):
     
     except:
         raise ValueError(f"[-] DataPipeline.extract_contracts_multipliers_operatiors Invalid expression {exp} fail to parse")
+
+
+def extract_contracts_multipliers(exp: str)->tuple[list[str], list[int]]:
+    contracts, multipliers, operators = extract_contracts_multipliers_operators(exp)
+    
+    for itr in range(len(contracts)):
+        if operators[itr] == '-':
+            multipliers[itr] *= -1
+
+    return contracts, multipliers
+
 
 def extract_min_year_from_contracts(
     contracts: list[str]
