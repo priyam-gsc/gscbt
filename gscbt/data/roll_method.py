@@ -60,8 +60,14 @@ def roll_offset(
         trimmed = trimmed.loc[:rt_date_list[idx]]
 
         if data_type in [DataType.BACKADJUSTED, DataType.FORWARDADJUSTED]:
-            diff = contract_df.loc[rt_date_list[idx-1]]["close"] 
-            diff = diff - res_df.loc[rt_date_list[idx-1]]["close"]                
+            try :
+                diff = contract_df.loc[rt_date_list[idx-1]]["close"] 
+                diff = diff - res_df.loc[rt_date_list[idx-1]]["close"]                
+            except:
+                raise Exception(
+                    "Fail to calculate the diff for same timestamp "
+                    "to performe data adjustment(i.e. BACKADJUSTED | FORWARDADJUSTED)"
+                )
 
             if data_type == DataType.BACKADJUSTED:
                 res_df = df_apply_operation_to_given_columns(
