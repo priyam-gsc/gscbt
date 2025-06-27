@@ -82,7 +82,7 @@ class SyntheticLeg:
                 contract_df, ok = get_outright(
                     contract_ticker,
                     contract,
-                    "ohlc",
+                    self.ohlcv,
                     self.interval,
                 )
 
