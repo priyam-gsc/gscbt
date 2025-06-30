@@ -222,3 +222,73 @@ def sbw_get_spreadwise(
     df1["ideal_roll_date"] = df2["ideal_roll_date"]
 
     return df1
+
+
+def sbw_synthetic_from_toml_stream_common_spec(
+        file : str | io.BytesIO,
+    ) -> pd.DataFrame:
+
+    config = None
+    if isinstance(file, str):
+        with open(file, "rb") as f:
+            config = tomllib.load(f)
+    elif isinstance(file, io.BytesIO):
+        config = tomllib.load(file)
+    else:
+        raise ValueError(f"file should be file_path or io.BytesIO")
+
+    contract_spec = ContractSpec(
+        data_type = DATATYPEDICT[config.get("data_type")],
+        valuation_type = VALUATIONTYPEDICT[config.get("valuation_type")],
+        roll_method = ROLLMETHODDICT[config.get("roll_method")]
+    )
+    interval = config.get("interval")
+
+    legs = []
+    for leg in config.get("legs", []):
+        temp_contract_spec = contract_spec
+        temp_contract_spec.roll_params = RollParams(
+            offset = leg.get("offset"),
+            max_lookahead = leg.get("max_lookahead"),
+        )
+
+        leg["contract_spec"] = temp_contract_spec
+        leg["interval"] = interval
+        legs.append(leg)
+
+    sb = SyntheticBuilder(legs)
+    df1 = sb.get()
+
+    return df1
+
+def sbw_create_toml_skeleton_common_spec(
+    file: str | io.StringIO,
+    leg_count: int = 1,
+) -> None:
+
+    if isinstance(file, str):
+        f = open(file, "w")
+    elif isinstance(file, io.StringIO):
+        f = file
+
+    # Write header section
+    f.write('data_type = "forward"\n')
+    f.write('valuation_type = "de"\n')
+    f.write('roll_method = "offset"\n')
+    f.write('interval = "1d"\n\n')
+
+    # Write each leg as a TOML table array
+    for i in range(1, leg_count + 1):
+        f.write('[[legs]]\n')
+        f.write(f'leg = {i}\n')
+        f.write('contract = ""\n')
+        f.write('contract_roll_months = ""\n')
+        f.write('rt_contract = ""\n')
+        f.write('rt_contract_roll_months = ""\n')
+        f.write('start_rt_contract = ""\n')
+        f.write('multiplier = \n')
+        f.write('offset = 10\n')
+        f.write('max_lookahead = 2\n\n')
+
+    if isinstance(file, str):
+        f.close()
