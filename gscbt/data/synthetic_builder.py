@@ -13,6 +13,8 @@ class SyntheticBuilder:
         rt_contract_roll_months : str,
         start_rt_contract : str,
         multiplier : int,
+        contract_spec : ContractSpec,
+        interval : str,
     ) -> dict:
 
         leg = {}
@@ -22,19 +24,16 @@ class SyntheticBuilder:
         leg["rt_contract_roll_months"] = rt_contract_roll_months
         leg["start_rt_contract"] = start_rt_contract
         leg["multiplier"] = multiplier
+        leg["contract_spec"] = contract_spec
+        leg["interval"] = interval
 
         return leg
 
     def __init__(
         self,
         legs : list,
-        contract_spec : ContractSpec,
-        interval : str,
     ):
         self.legs = legs
-        self.contact_spec = contract_spec
-        self.interval = interval
-
         self._df : pd.DataFrame = pd.DataFrame()
 
     def get(self) -> pd.DataFrame:
@@ -57,12 +56,11 @@ class SyntheticBuilder:
                 rt_contract_roll_months = leg["rt_contract_roll_months"],
                 start_rt_contract = leg["start_rt_contract"],
                 multiplier = leg["multiplier"],
-                contract_spec = self.contact_spec,
+                contract_spec = leg["contract_spec"],
+                interval = leg["interval"],
                 ohlcv = "c",
-                interval= self.interval,
                 extra_columns = [],
             )
-
             curr_leg.create()
             leg_list.append(curr_leg.get())
 

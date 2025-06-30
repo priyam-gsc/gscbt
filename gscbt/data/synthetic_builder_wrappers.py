@@ -1,5 +1,7 @@
 from datetime import datetime
 import json
+import tomllib
+import io
 
 import pandas as pd
 import requests
@@ -14,6 +16,11 @@ from .contract_spec import (
     ValuationType,
     RollMethod,
     RollParams,
+)
+from .contract_spec_dict import (
+    DATATYPEDICT,
+    VALUATIONTYPEDICT,
+    ROLLMETHODDICT,
 )
 from .utils import get_full_year
 
@@ -78,18 +85,6 @@ def sbw_get_contractwise(
             min_contract = contract
             min_expiry = contract_expiry
 
-    legs = []
-    for itr in range(len(contracts)):
-        leg = SyntheticBuilder.create_leg(
-            contract = contracts[itr],
-            contract_roll_months = contracts[itr][-3],
-            rt_contract = min_contract,
-            rt_contract_roll_months = min_contract[-3],
-            start_rt_contract = min_contract[:-2] + str(start_year%100),
-            multiplier =  multipliers[itr],
-        )
-
-        legs.append(leg)
 
     data_type = DataType.CONTINUOUS
     if isForwardAdjusted:
@@ -105,11 +100,22 @@ def sbw_get_contractwise(
         )
     )
 
-    sb = SyntheticBuilder(
-        legs = legs,
-        contract_spec = contract_spec,
-        interval = interval
-    )
+    legs = []
+    for itr in range(len(contracts)):
+        leg = SyntheticBuilder.create_leg(
+            contract = contracts[itr],
+            contract_roll_months = contracts[itr][-3],
+            rt_contract = min_contract,
+            rt_contract_roll_months = min_contract[-3],
+            start_rt_contract = min_contract[:-2] + str(start_year%100),
+            multiplier =  multipliers[itr],
+            contract_spec = contract_spec,
+            interval = interval,
+        )
+
+        legs.append(leg)
+
+    sb = SyntheticBuilder(legs)
     df1 = sb.get()
 
     # for extracting ideal roll date
@@ -156,31 +162,6 @@ def sbw_get_spreadwise(
             min_contract = contract
             min_expiry = contract_expiry
 
-    legs = []
-    for itr in range(len(contracts)):
-        contract = contracts[itr]
-
-        contract_roll_months = get_instrument_contract_months(contract[:-3])
-        rt_contract_roll_months = get_instrument_contract_months(min_contract[:-3])
-
-        if len(contract_roll_months) != len(rt_contract_roll_months):
-            raise ValueError(
-                f"contract {contract} and roll trigger contract {min_contract} \
-                months length don't match {contract_roll_months} & {rt_contract_roll_months}"
-            )
-
-
-        leg = SyntheticBuilder.create_leg(
-            contract = contract,
-            contract_roll_months = contract_roll_months,
-            rt_contract = min_contract,
-            rt_contract_roll_months = rt_contract_roll_months,
-            start_rt_contract = min_contract[:-2] + str(start_year%100),
-            multiplier =  multipliers[itr],
-        )
-
-        legs.append(leg)
-
     data_type = DataType.CONTINUOUS
     if isForwardAdjusted:
         data_type = DataType.FORWARDADJUSTED
@@ -195,12 +176,33 @@ def sbw_get_spreadwise(
         )
     )
 
-    sb = SyntheticBuilder(
-        legs = legs,
-        contract_spec = contract_spec,
-        interval = interval
-    )
+    legs = []
+    for itr in range(len(contracts)):
+        contract = contracts[itr]
 
+        contract_roll_months = get_instrument_contract_months(contract[:-3])
+        rt_contract_roll_months = get_instrument_contract_months(min_contract[:-3])
+
+        if len(contract_roll_months) != len(rt_contract_roll_months):
+            raise ValueError(
+                f"contract {contract} and roll trigger contract {min_contract} \
+                months length don't match {contract_roll_months} & {rt_contract_roll_months}"
+            )
+
+        leg = SyntheticBuilder.create_leg(
+            contract = contract,
+            contract_roll_months = contract_roll_months,
+            rt_contract = min_contract,
+            rt_contract_roll_months = rt_contract_roll_months,
+            start_rt_contract = min_contract[:-2] + str(start_year%100),
+            multiplier =  multipliers[itr],
+            contract_spec = contract_spec,
+            interval = interval,
+        )
+
+        legs.append(leg)
+
+    sb = SyntheticBuilder(legs)
     df1 = sb.get()
 
     # for extracting ideal roll date
