@@ -68,8 +68,7 @@ class SyntheticLeg:
         rt_contract_df = None
 
         while True:
-
-            year = get_full_year(int(contract[-2:]))
+            year = get_full_year(int(rt_contract[-2:]))
             src_year = get_full_year(int(self.start_rt_contract[-2:])) # src = start_rt_contract
             month = contract[-3]
             src_month = self.start_rt_contract[-3]
