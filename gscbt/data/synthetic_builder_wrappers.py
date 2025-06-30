@@ -7,7 +7,10 @@ import pandas as pd
 import requests
 
 from gscbt.ticker import get_instrument_contract_months
-from gscbt.expression_utils import extract_contracts_multipliers
+from gscbt.expression_utils import (
+    extract_contracts_multipliers,
+    move_contracts_to_prev_valid_month,
+)
 
 from .synthetic_builder import SyntheticLeg, SyntheticBuilder
 from .contract_spec import (
@@ -134,7 +137,11 @@ def sbw_get_contractwise(
     df2 = sl.get()
     df1["ideal_roll_date"] = df2["ideal_roll_date"]
 
-    return df1
+    # cropping first df
+    approx_start_date = pd.to_datetime(df2["ideal_roll_date"].iloc[0])
+    approx_start_date -= pd.DateOffset(years=1)
+
+    return df1.loc[approx_start_date:]
 
 def sbw_get_spreadwise(
     expression : str,
@@ -152,6 +159,9 @@ def sbw_get_spreadwise(
 
     contracts, multipliers = extract_contracts_multipliers(expression)
     contracts = move_contracts_to_give_year_from_min(contracts, end_year)
+    
+    # for cropping first df
+    contracts = move_contracts_to_prev_valid_month(contracts)
 
     min_contract = None
     min_expiry = None
@@ -221,7 +231,9 @@ def sbw_get_spreadwise(
     df2 = sl.get()
     df1["ideal_roll_date"] = df2["ideal_roll_date"]
 
-    return df1
+    # cropping first df
+    approx_start_date = df2["ideal_roll_date"].iloc[0]
+    return df1[df1["ideal_roll_date"] != approx_start_date]
 
 
 def sbw_synthetic_from_toml_stream_common_spec(
