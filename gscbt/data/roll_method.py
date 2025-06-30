@@ -52,8 +52,7 @@ def roll_offset(
 
     for idx, contract_df in enumerate(contract_df_list):
         if res_df.empty:
-            approx_start_date = rt_date_list[idx] - pd.DateOffset(years=1)
-            res_df = contract_df.loc[approx_start_date:rt_date_list[idx]].copy()
+            res_df = contract_df.loc[:rt_date_list[idx]].copy()
             continue
 
         trimmed = contract_df[contract_df.index > rt_date_list[idx-1]]
