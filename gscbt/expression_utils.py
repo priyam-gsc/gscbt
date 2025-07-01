@@ -91,16 +91,23 @@ def extract_contracts_multipliers(exp: str)->tuple[list[str], list[int]]:
     return contracts, multipliers
 
 
-def extract_min_year_from_contracts(
+def extract_full_min_year_from_contracts(
     contracts: list[str]
-) -> str:
+) -> int:
 
     min_year = 9999
     for contract in contracts:
-        full_year = get_full_year(contract[-2:])
+        full_year = get_full_year(int(contract[-2:]))
         if min_year > full_year:
             min_year = full_year
 
+    return min_year
+
+def extract_min_year_from_contracts(
+    contracts: list[str]
+) -> str:
+    
+    min_year = extract_full_min_year_from_contracts(contracts)
     return f"{min_year%100}"
 
 def extract_year_offset( contracts: list[str]) -> int:

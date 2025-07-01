@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="gscbt",
-    version="0.1.2",
+    version="0.1.3",
     author="Priyam",
     description="Data Pipeline for backtesting",
     long_description=open('README.md').read(),
