@@ -2,6 +2,7 @@ from datetime import datetime
 
 from gscbt.ticker import Ticker
 from gscbt.utils import MonthMap
+from gscbt.data.utils import get_full_year
 
 
 def extract_sym_month_year_from_contract(         
@@ -93,19 +94,14 @@ def extract_contracts_multipliers(exp: str)->tuple[list[str], list[int]]:
 def extract_min_year_from_contracts(
     contracts: list[str]
 ) -> str:
-    # [Assumption] at any point of time we have at max 75 year of data
-    MAX_DATA_AVAIL = 75
-    itr = (int(str(datetime.today().year)[-2:]) + 100 - MAX_DATA_AVAIL)%100
-    min_year = None
-    
-    for _ in range(100): 
-        for contract in contracts:
-            if itr == int(contract[-2:]):
-                min_year = itr
-                break
-        itr -= 1
-        itr %= 100
-    return f"{min_year:02}"
+
+    min_year = 9999
+    for contract in contracts:
+        full_year = get_full_year(contract[-2:])
+        if min_year > full_year:
+            min_year = full_year
+
+    return f"{min_year%100}"
 
 def extract_year_offset( contracts: list[str]) -> int:
     min_year = int(extract_min_year_from_contracts(contracts))
