@@ -13,14 +13,26 @@ SEPARATOR = "||"
 
 SIZE_INT   = ctypes.sizeof(ctypes.c_int)
 SIZE_LONG  = ctypes.sizeof(ctypes.c_long)
-BYTEORDER  = sys.byteorder  # 'little' or 'big'
+BYTEORDER  = "little"  # 'little' or 'big'
 
-# Native C struct formats
-# '@i' = C int, '@l' = C long, native order & alignment
-_pack_int  = struct.Struct('@i').pack
-_unpack_int = struct.Struct('@i').unpack
-_pack_long_long = struct.Struct('@q').pack
-_unpack_long_long = struct.Struct('@q').unpack
+# ——————————————————————————————————————————————————————————————————
+# Helpers to unpack C++-style int and long
+# ——————————————————————————————————————————————————————————————————
+SIZE_INT  = 4
+SIZE_LONG = 8
+BYTEORDER = sys.byteorder  # 'little' or 'big'
+
+def unpack_c_int(data: bytes) -> int:
+    """Unpack a C 'int' from bytes using native byte order."""
+    if len(data) != SIZE_INT:
+        raise ValueError(f"Expected {SIZE_INT} bytes for C 'int', got {len(data)}")
+    return int.from_bytes(data, byteorder=BYTEORDER, signed=True)
+
+def unpack_c_long(data: bytes) -> int:
+    """Unpack a C 'long' from bytes using native byte order."""
+    if len(data) != SIZE_LONG:
+        raise ValueError(f"Expected {SIZE_LONG} bytes for C 'long', got {len(data)}")
+    return int.from_bytes(data, byteorder=BYTEORDER, signed=True)
 
 
 def prep_hdb_key(*args) -> str:
@@ -43,12 +55,12 @@ def hdb_download(
             sock.sendall(data_key)
 
             raw_flag = sock.recv(SIZE_INT)
-            flag = _unpack_int(raw_flag)[0]
+            flag = unpack_c_int(raw_flag)
             if flag != 1:
                 return flag
 
             raw_size = sock.recv(SIZE_LONG)
-            size = _unpack_long_long(raw_size)[0]
+            size = unpack_c_long(raw_size)
 
             bytes_recd = 0
             if size > 0:
