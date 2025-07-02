@@ -10,7 +10,7 @@ from gscbt.ticker import get_instrument_contract_months
 from gscbt.expression_utils import (
     extract_contracts_multipliers,
     move_contracts_to_prev_valid_month,
-    move_contracts_to_give_year_from_min,
+    move_contracts_to_given_year_from_min,
 )
 
 from .synthetic_builder import SyntheticLeg, SyntheticBuilder
@@ -62,7 +62,7 @@ def sbw_get_contractwise(
         end_year = datetime.now().year - 2
 
     contracts, multipliers = extract_contracts_multipliers(expression)
-    contracts = move_contracts_to_give_year_from_min(contracts, end_year)
+    contracts = move_contracts_to_given_year_from_min(contracts, end_year)
 
     min_contract = None
     min_expiry = None
@@ -143,7 +143,7 @@ def sbw_get_spreadwise(
         end_year = datetime.now().year - 2
 
     contracts, multipliers = extract_contracts_multipliers(expression)
-    contracts = move_contracts_to_give_year_from_min(contracts, end_year)
+    contracts = move_contracts_to_given_year_from_min(contracts, end_year)
     
     # for cropping first df
     contracts = move_contracts_to_prev_valid_month(contracts)
