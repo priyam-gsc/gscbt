@@ -10,6 +10,7 @@ from gscbt.ticker import get_instrument_contract_months
 from gscbt.expression_utils import (
     extract_contracts_multipliers,
     move_contracts_to_prev_valid_month,
+    move_contracts_to_give_year_from_min,
 )
 
 from .synthetic_builder import SyntheticLeg, SyntheticBuilder
@@ -25,7 +26,6 @@ from .contract_spec_dict import (
     VALUATIONTYPEDICT,
     ROLLMETHODDICT,
 )
-from .utils import get_full_year
 
 def get_contract_expiry(contract : str) -> pd.Timestamp:
     response = requests.get(
@@ -45,21 +45,6 @@ def get_contract_expiry(contract : str) -> pd.Timestamp:
                 pass
 
     raise ValueError(f"contract {contract} can't find expiry for it")
-
-def move_contracts_to_give_year_from_min(contracts: list[str], year: int) -> list[str]:
-    min_year = None
-    for contract in contracts:
-        if min_year == None or min_year > get_full_year(int(contract[-2:])):
-            min_year = get_full_year(int(contract[-2:]))
-
-    diff = year - min_year
-    updated_contracts = []
-    for contract in contracts:
-        updated_year = get_full_year(int(contract[-2:])) + diff
-        
-        updated_contracts.append(f"{contract[:-2]}{updated_year%100}")
-
-    return updated_contracts
 
 
 def sbw_get_contractwise(

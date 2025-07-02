@@ -1,14 +1,16 @@
 import pandas as pd 
 
 from gscbt.ticker import Ticker
-from gscbt.expression_utils import move_contract_to_given_prev_valid_month
+from gscbt.expression_utils import (
+    move_contract_to_given_prev_valid_month, 
+    get_full_year,
+)
 from gscbt.utils import Interval
 
 from .outright import get_outright
 from .roll_method import roll_offset
 from .utils import (
     df_apply_operation_to_given_columns,
-    get_full_year,
     drop_ohlcv,
 )
 from .contract_spec import (

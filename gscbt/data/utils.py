@@ -75,12 +75,3 @@ def df2df_apply_operation_to_given_columns(
                 raise ValueError(f"Unsupported operation: {op}")
     
     return df1
-
-def get_full_year(
-    two_digit_year : int,
-    pivot : int = 50,
-) -> int:
-    if two_digit_year < pivot:
-        return 2000 + two_digit_year
-    else: 
-        return 1900 + two_digit_year
