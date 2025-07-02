@@ -279,6 +279,7 @@ def get_spread(
             max_lookahead = max_lookahead,
         )
 
+        res_df["days_to_roll"] = res_df.roll_date - res_df.index
         return res_df.loc[start:]
     
 
@@ -294,6 +295,7 @@ def get_spread(
             max_lookahead = max_lookahead,
         )
 
+        res_df["days_to_roll"] = res_df.roll_date - res_df.index
         return res_df.loc[start:]
     
     raise ValueError(f"[-] A roll_method allowed values are (1) contractwise (2) spreadwise")
