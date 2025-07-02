@@ -2,7 +2,6 @@ from datetime import datetime
 
 from gscbt.ticker import Ticker
 from gscbt.utils import MonthMap
-from gscbt.data.utils import get_full_year
 
 
 def extract_sym_month_year_from_contract(         
@@ -10,6 +9,14 @@ def extract_sym_month_year_from_contract(
 ) -> tuple[str, str, str]:
     return contract[:-3], contract[-3], contract[-2:]
 
+def get_full_year(
+    two_digit_year : int,
+    pivot : int = 50,
+) -> int:
+    if two_digit_year < pivot:
+        return 2000 + two_digit_year
+    else: 
+        return 1900 + two_digit_year
 
 def extract_contracts_multipliers_operators( exp: str):
     try:
@@ -70,16 +77,10 @@ def extract_contracts_multipliers_operators( exp: str):
                 raise ValueError(f"[-] DataPipeline.extract_contracts_multipliers_operatiors \
                                     Invalid expression contract month in {contract} fail to parse")
 
-        year_offset = extract_year_offset(contracts)
-        if(year_offset < 0):
-            raise ValueError(f"[-] DataPipeline.extract_contracts_multipliers_operatiors \
-                                Invalid expression contract year is less than current year in {contracts} fail to parse")   
-
         return contracts, multipliers, operators
     
     except:
         raise ValueError(f"[-] DataPipeline.extract_contracts_multipliers_operatiors Invalid expression {exp} fail to parse")
-
 
 def extract_contracts_multipliers(exp: str)->tuple[list[str], list[int]]:
     contracts, multipliers, operators = extract_contracts_multipliers_operators(exp)
@@ -89,7 +90,6 @@ def extract_contracts_multipliers(exp: str)->tuple[list[str], list[int]]:
             multipliers[itr] *= -1
 
     return contracts, multipliers
-
 
 def extract_full_min_year_from_contracts(
     contracts: list[str]
@@ -103,82 +103,13 @@ def extract_full_min_year_from_contracts(
 
     return min_year
 
-def extract_min_year_from_contracts(
-    contracts: list[str]
-) -> str:
-    
-    min_year = extract_full_min_year_from_contracts(contracts)
-    return f"{min_year%100}"
-
-def extract_year_offset( contracts: list[str]) -> int:
-    min_year = int(extract_min_year_from_contracts(contracts))
-
-    l1 = (min_year - int(str(datetime.today().year)[-2:])) % 100
-    l2 = (int(str(datetime.today().year)[-2:]) - min_year) % 100
-
-    if l1 < l2:
-        return l1
-    else:
-        return -l2 
-
-def extract_min_month_from_contracts_for_given_year(
-    contracts: list[str],
-    year: str,
-) -> tuple[str, int]:        
-    min_month = ""
-    min_month_idx = 13
-    for contract in contracts:
-        if contract[-2:] == year:
-            month_idx = MonthMap.month(contract[-3:-2])
-            if min_month_idx > month_idx:
-                min_month_idx = month_idx
-                min_month = contract[-3:-2]
-    return min_month, min_month_idx
-
-def extract_min_contracts_from_contracts(
-    offset_contracts : list[str],
-) -> list[str]:
-    min_year = f"{extract_min_year_from_contracts(offset_contracts):02}"
-    min_month_code, _ = extract_min_month_from_contracts_for_given_year(offset_contracts, min_year)
-
-    min_contracts = []
-    suffix = min_month_code + min_year
-    for contract in offset_contracts:
-        if suffix == contract[-3:]:
-            min_contracts.append(contract)
-
-    return min_contracts      
-    
-# below 2 functions don't have negative offset support 
-def convert_contracts_to_offset_contracts(
-    contracts : list[str], 
-) -> list[str]:
-    offset_contracts = []
-    min_year = extract_min_year_from_contracts(contracts)
-    year_offset = extract_year_offset(contracts)
-
-    for contract in contracts:
-        val = (int(contract[-2:]) - int(min_year) + year_offset)
-        offset_contracts.append(f"{contract[:-2]}{val:02}")
-
-    return offset_contracts
-
-def convert_offset_contracts_to_given_year(
-    offset_contracts : list[str],
-    year : str,
-) -> list[str]:
-    contracts = []
-    for contract in offset_contracts:
-        contracts.append(f"{contract[:-2]}{(int(contract[-2:]) + int(year))%100:02}")
-    
-    return contracts
-
 def move_contracts_to_prev_year(
     contracts : list[str],
 ) -> list[str]:
     moved_contracts = []
     for contract in contracts:
-        moved_contracts.append(f"{contract[:-2]}{(int(contract[-2:])-1)%100:02}")
+        new_year = get_full_year(int(contract[-2:])) - 1
+        moved_contracts.append(f"{contract[:-2]}{new_year % 100:02}")
 
     return moved_contracts
 
@@ -198,7 +129,8 @@ def move_contracts_to_next_valid_month(
                 raise 
 
             if idx == len(valid_months)-1:
-                contract = contract[:-3] + valid_months[0]  + f"{(int(contract[-2:])+1)%100:02}"
+                new_year = get_full_year(int(contract[-2:])) + 1
+                contract = contract[:-3] + valid_months[0]  + f"{new_year % 100:02}"
             else:
                 contract = contract[:-3] + valid_months[idx+1] + contract[-2:]
 
@@ -224,7 +156,8 @@ def move_contracts_to_prev_valid_month(
                 raise 
 
             if idx == 0:
-                contract = contract[:-3] + valid_months[-1]  + f"{(int(contract[-2:])-1)%100:02}"
+                new_year = get_full_year(int(contract[-2:])) - 1
+                contract = contract[:-3] + valid_months[-1]  + f"{new_year%100:02}"
             else:
                 contract = contract[:-3] + valid_months[idx-1] + contract[-2:]
 
@@ -233,7 +166,7 @@ def move_contracts_to_prev_valid_month(
         return moved_contracts
     except:
         raise ValueError(f"[-] DataPipeline.move_contracts_to_prev_valid_month Invalid contract value {contract}")
-
+   
 def move_contract_to_given_next_valid_month(
     contract : str,
     valid_months : str,
@@ -244,7 +177,8 @@ def move_contract_to_given_next_valid_month(
         raise
 
     if idx == len(valid_months) - 1:
-        return f"{contract[:-3]}{valid_months[0]}{(int(contract[-2:])+1)%100:02}"
+        new_year = get_full_year(int(contract[-2:])) + 1
+        return f"{contract[:-3]}{valid_months[0]}{new_year%100:02}"
 
     return f"{contract[:-3]}{valid_months[idx+1]}{contract[-2:]}"
 
@@ -258,8 +192,22 @@ def move_contract_to_given_prev_valid_month(
         raise
 
     if idx == 0:
-        idx = len(valid_months) -1
-        return f"{contract[:-3]}{valid_months[idx]}{(int(contract[-2:])-1)%100:02}"
+        new_year = get_full_year(int(contract[-2:])) - 1
+        return f"{contract[:-3]}{valid_months[-1]}{new_year%100:02}"
     else:
-        idx -= 1
-        return f"{contract[:-3]}{valid_months[idx]}{contract[-2:]}"
+        return f"{contract[:-3]}{valid_months[idx-1]}{contract[-2:]}"
+       
+def move_contracts_to_given_year_from_min(contracts: list[str], year: int) -> list[str]:
+    min_year = None
+    for contract in contracts:
+        if min_year == None or min_year > get_full_year(int(contract[-2:])):
+            min_year = get_full_year(int(contract[-2:]))
+
+    diff = year - min_year
+    updated_contracts = []
+    for contract in contracts:
+        updated_year = get_full_year(int(contract[-2:])) + diff
+        
+        updated_contracts.append(f"{contract[:-2]}{updated_year%100:02}")
+
+    return updated_contracts
