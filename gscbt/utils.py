@@ -1,8 +1,10 @@
 from datetime import datetime
 from pathlib import Path
+from io import BytesIO
 import os
 
 import requests
+import pandas as pd
 import polars as pl
 from dotenv import load_dotenv, dotenv_values, set_key
 
@@ -192,6 +194,27 @@ def remove_file(path: Path):
     if path.exists():
         path.unlink()
 
+def req_wrapper(
+    url : str,
+    params : dict = None,
+    timeout : int = 30,
+) -> tuple[int, bytes]:
+
+    res = requests.get(
+        url,
+        params = params,
+        stream = True,
+        timeout = timeout,
+        allow_redirects = False,
+    )
+
+    return res.status_code, res.content
+
+def bytes_to_df(
+    content : bytes,
+) -> pd.DataFrame:
+    
+    return pd.read_json(BytesIO(content))
 
 if __name__ == "__main__":
     pass
