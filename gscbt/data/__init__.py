@@ -10,3 +10,4 @@ from .synthetic_builder_wrappers import(
 )
 
 from .live_data import get_live_data
+from .live_synthetic import get_live_synthetic
