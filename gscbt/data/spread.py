@@ -19,7 +19,7 @@ def offset_roll(
     interval : str,
     isBackAdjusted : bool,
     max_lookahead : int,
-
+    mode : str =  "normal"
 ) -> pd.DataFrame:
     
     if len(synthetic_df_list) != len(synthetic_roll_list):
@@ -43,16 +43,21 @@ def offset_roll(
         if isBackAdjusted:
             diff = None
 
-            for _ in range(max_lookahead+1):     
-                if roll_date in res_df.index and roll_date in itr_synthetic.index:
-                    d1 = res_df["close"].loc[roll_date]
-                    d2 = itr_synthetic["close"].loc[roll_date]
+            if mode == "normal":
+                for _ in range(max_lookahead+1):
+                    if roll_date in res_df.index and roll_date in itr_synthetic.index:
+                        d1 = res_df["close"].loc[roll_date]
+                        d2 = itr_synthetic["close"].loc[roll_date]
 
-                    if not pd.isna(d1) and not pd.isna(d2):
-                        diff = d2 - d1
-                        break
+                        if not pd.isna(d1) and not pd.isna(d2):
+                            diff = d2 - d1
+                            break
 
-                roll_date += interval_offset
+                    roll_date += interval_offset
+            elif mode == "force":
+                d1 = res_df["close"].loc[roll_date]
+                d2 = itr_synthetic[itr_synthetic.index > roll_date]["close"].dropna().iloc[0]
+                diff = d2 - d1
 
             if diff == None:
                 raise Exception("[-] Fail to backadjust in given max_lookahead.")

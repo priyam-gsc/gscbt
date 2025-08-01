@@ -21,7 +21,7 @@ from gscbt.expression_utils import (
 
 def get_config():
     # getting json data
-    CONFIG_DATA_API = "http://192.168.0.170:8050/api/product"
+    CONFIG_DATA_API = "http://127.0.0.1:24502"
 
     status_code, content = req_wrapper(
         CONFIG_DATA_API,
@@ -47,6 +47,7 @@ def get_live_synthetic_contractwise(
     interval : str,
     offset : int,
     max_lookahead : int,
+    mode : str = "normal"
 ) -> pd.DataFrame:
     
     contracts, multipliers = extract_contracts_multipliers(expression)
@@ -111,7 +112,8 @@ def get_live_synthetic_contractwise(
         synthetic_roll_list = synthetic_roll_list,
         interval = interval,
         isBackAdjusted = isBackAdjusted,
-        max_lookahead = max_lookahead
+        max_lookahead = max_lookahead,
+        mode=mode,
     )
 
     return res_df
@@ -125,6 +127,7 @@ def get_live_synthetic(
     interval : str = "1d",
     roll_method : str = "contractwise",
     max_lookahead : int | None = None,
+    mode : str = "normal"
 ) -> pd.DataFrame:
     
     if isBackAdjusted and max_lookahead == None:
@@ -141,6 +144,7 @@ def get_live_synthetic(
             interval = interval,
             offset = offset,
             max_lookahead = max_lookahead,
+            mode = mode,
         )
 
         res_df["days_to_roll"] = res_df.roll_date - res_df.index
