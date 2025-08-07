@@ -26,43 +26,34 @@ def extract_contracts_multipliers_operators( exp: str):
         operators = []
         s = "" 
 
-        itr  = 0
+        if exp[0] == '-':
+            operators.append('-')
+        else:
+            operators.append('+')
+
+        tmp_contract_list = []
+        itr = 0
         while itr < len(exp):
-            if itr == 0:
-                if exp[itr] == "-":
+            if exp[itr] in "+-":
+                if itr != 0:
                     operators.append(exp[itr])
-                else:
-                    operators.append("+")
-
-            if exp[itr] not in "+-*0123456789":
-                if(itr == 0 or exp[itr-1] in "+-"):
-                    multipliers.append(1)
-                else:
-                    mul = ""
-                    temp_itr = itr-2
-                    while(temp_itr >= 0):
-                        if(not("0" <= exp[temp_itr] and exp[temp_itr] <= "9")):
-                            break
-                        else:
-                            mul += exp[temp_itr]
-                        temp_itr -= 1
-
-                    multipliers.append(int(mul[::-1]))  
-
+                    tmp_contract_list.append(s)
                 s = ""
-                while itr < len(exp):
-                    if exp[itr] == "+" or exp[itr] == "-":
-                        operators.append(exp[itr])
-                        contracts.append(s)
-                        break
-                    else:
-                        s += exp[itr]
-                    
-                    itr += 1
-                    if itr == len(exp):
-                        contracts.append(s)
             else:
-                itr += 1
+                s += exp[itr]
+
+            itr += 1
+        # for last itr
+        tmp_contract_list.append(s)
+
+        for tmp_contract in tmp_contract_list:
+            idx = tmp_contract.find("*")
+            if idx != -1:
+                multipliers.append(int(tmp_contract[:idx]))
+                contracts.append(tmp_contract[idx+1:])
+            else:
+                multipliers.append(1)
+                contracts.append(tmp_contract)
 
         if not (len(contracts) == len(multipliers) and len(multipliers) == len(operators)):
             raise 
@@ -71,11 +62,11 @@ def extract_contracts_multipliers_operators( exp: str):
             _ = int(contract[-2:])
             _ = MonthMap.month(contract[-3])
 
-            sym = contract[:-3]
-            valid_months = Ticker.SYMBOLS[sym].contract_months
-            if valid_months.replace("-", "").find(contract[-3]) == -1:
-                raise ValueError(f"[-] DataPipeline.extract_contracts_multipliers_operatiors \
-                                    Invalid expression contract month in {contract} fail to parse")
+            # sym = contract[:-3]
+            # valid_months = Ticker.SYMBOLS[sym].contract_months
+            # if valid_months.replace("-", "").find(contract[-3]) == -1:
+            #     raise ValueError(f"[-] DataPipeline.extract_contracts_multipliers_operatiors \
+            #                         Invalid expression contract month in {contract} fail to parse")
 
         return contracts, multipliers, operators
     
