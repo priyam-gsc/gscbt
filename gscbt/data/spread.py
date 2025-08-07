@@ -55,10 +55,16 @@ def offset_roll(
 
                     roll_date += interval_offset
             elif mode == "force":
-                d1 = res_df["close"].loc[roll_date]
-                d2 = itr_synthetic[itr_synthetic.index > roll_date]["close"].dropna().iloc[0]
-                diff = d2 - d1
+                for _ in range(max_lookahead+1):
+                    if roll_date in res_df.index:
+                        d1 = res_df["close"].loc[roll_date]
+                        d2 = itr_synthetic[itr_synthetic.index >= roll_date]["close"].dropna().iloc[0]
 
+                        if not pd.isna(d1) and not pd.isna(d2):
+                            diff = d2 - d1
+                            break
+
+                    roll_date += interval_offset
             if diff == None:
                 raise Exception("[-] Fail to backadjust in given max_lookahead.")
             
