@@ -152,3 +152,56 @@ def get_live_synthetic(
     
 
     return pd.DataFrame()
+
+
+
+def get_live_synthetic_stack(
+    expression : str,
+    start_year : int,
+    interval : str = "1d",
+) -> list[pd.DataFrame]:
+    contracts, multipliers = extract_contracts_multipliers(expression)
+    contract_count = len(contracts)
+    META = get_config()
+
+    synthetic_df_list = []
+
+    end_year = datetime.today().year
+    itr_contracts = contracts
+
+    for itr_year in range(end_year, start_year-1, -1):
+        itr_synthetic_df = pd.DataFrame()
+        roll_date = None
+        isAllLegFound = True
+
+        for itr in range(contract_count):
+            itr_contract = itr_contracts[itr]
+
+            ok, df = get_live_data(
+                    symbol = itr_contract,
+                   ohlcv = "c",
+            )
+            if not ok:
+                isAllLegFound = False
+                print(f"Data for contract {itr_contract} not available so stop at year {itr_year}")
+                break
+
+            df = df * multipliers[itr]
+            df = df * META[itr_contract[:-3]]["currencyMultiplier"]
+
+            if itr_synthetic_df.empty:
+                itr_synthetic_df = df.copy()
+            else:
+                itr_synthetic_df += df
+
+        if not isAllLegFound:
+            break
+
+        itr_synthetic_df.rename(columns={"close": str(itr_year)}, inplace=True)
+        synthetic_df_list.append(itr_synthetic_df)
+
+        itr_contracts = move_contracts_to_prev_year(itr_contracts)
+
+    synthetic_df_list = synthetic_df_list[::-1]
+
+    return synthetic_df_list
