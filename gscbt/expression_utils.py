@@ -82,6 +82,33 @@ def extract_contracts_multipliers(exp: str)->tuple[list[str], list[int]]:
 
     return contracts, multipliers
 
+def create_expression_from_contracts_multipliers(
+    contracts : list[str],
+    multipliers : list[int]
+) -> str:
+    exp = ""
+    if len(contracts) != len(multipliers):
+        return exp
+
+    for itr in range(len(contracts)):
+        if multipliers[itr] >= 0:
+            exp += '+'
+        exp += str(multipliers[itr])
+        exp += '*'
+        exp += str(contracts[itr])
+
+    return exp
+
+def concat_expressions(expressions : list[str]) -> str:
+    new_exp = ""
+    for expression in expressions:
+        if(new_exp != "" and expression[0] not in "+-"):
+            new_exp += '+'
+        new_exp += expression
+
+    return new_exp
+
+
 def extract_full_min_year_from_contracts(
     contracts: list[str]
 ) -> int:
