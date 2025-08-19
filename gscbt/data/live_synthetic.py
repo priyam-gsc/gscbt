@@ -189,15 +189,24 @@ def get_live_synthetic_stack(
             df = df * multipliers[itr]
             df = df * META[itr_contract[:-3]]["currencyMultiplier"]
 
+            itr_expiry_date = None
+            if itr_contract in META:
+                itr_expiry_date = META[itr_contract]["expiry"]
+                itr_expiry_date = pd.to_datetime(itr_expiry_date)
+            else:
+                itr_expiry_date = df.index[-1]
+
             if itr_synthetic_df.empty:
                 itr_synthetic_df = df.copy()
+                roll_date = itr_expiry_date
             else:
                 itr_synthetic_df += df
+                roll_date = min(roll_date, itr_expiry_date)
 
         if not isAllLegFound:
             break
 
-        itr_synthetic_df.rename(columns={"close": str(itr_year)}, inplace=True)
+        itr_synthetic_df.rename(columns={"close": str(roll_date.year)}, inplace=True)
         synthetic_df_list.append(itr_synthetic_df)
 
         itr_contracts = move_contracts_to_prev_year(itr_contracts)
