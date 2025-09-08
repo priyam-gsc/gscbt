@@ -35,7 +35,12 @@ def get_live_synthetic_contractwise_with_cache(
     
     contracts, multipliers = extract_contracts_multipliers(expression)
     contract_count = len(contracts)
-    META = get_config()
+
+    if "_META" in cache:
+        META = cache["_META"]
+    else:
+        META = get_config()
+        cache["_META"] = META
 
     synthetic_df_list = []
     synthetic_roll_list = []
