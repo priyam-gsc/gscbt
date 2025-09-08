@@ -21,7 +21,7 @@ from gscbt.expression_utils import (
 
 def get_config():
     # getting json data
-    CONFIG_DATA_API = "http://pt.local:24502"
+    CONFIG_DATA_API = "http://192.168.0.155:24502"
 
     status_code, content = req_wrapper(
         CONFIG_DATA_API,
