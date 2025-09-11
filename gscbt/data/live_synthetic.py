@@ -3,7 +3,10 @@ import json
 
 import pandas as pd
 
-from .live_data import get_live_data
+from .live_data import (
+    get_live_data,
+    get_tick_n_eod_combine_data
+)
 from .spread import (
     offset_roll
 )
@@ -47,9 +50,15 @@ def get_live_synthetic_contractwise(
     interval : str,
     offset : int,
     max_lookahead : int,
-    mode : str = "normal"
+    mode : str = "normal",
+    isTickNEod : bool = False,
 ) -> pd.DataFrame:
     
+    cache = {}
+
+    if isTickNEod and ohlcv != 'c':
+        raise ValueError(f"[-] In TickNEod mode value of ohlcv must be 'c'.")
+
     contracts, multipliers = extract_contracts_multipliers(expression)
     contract_count = len(contracts)
     META = get_config()
@@ -68,10 +77,20 @@ def get_live_synthetic_contractwise(
         for itr in range(contract_count):
             itr_contract = itr_contracts[itr]
 
-            ok, df = get_live_data(
-                    symbol = itr_contract,
-                   ohlcv = ohlcv,
-            ) 
+            if itr_contract in cache:
+                ok = True
+                df = cache[itr_contract]
+            else:
+                if isTickNEod and itr_contract in META:
+                    ok, df = get_tick_n_eod_combine_data(itr_contract)
+                else:
+                    ok, df = get_live_data(
+                        symbol = itr_contract,
+                        ohlcv = ohlcv,
+                    )
+                if ok:
+                    cache[itr_contract] = df
+
             if not ok:
                 isAllLegFound = False
                 print(f"Data for contract {itr_contract} not available so stop at year {itr_year}")
@@ -127,7 +146,8 @@ def get_live_synthetic(
     interval : str = "1d",
     roll_method : str = "contractwise",
     max_lookahead : int | None = None,
-    mode : str = "normal"
+    mode : str = "normal",
+    isTickNEod : bool = False
 ) -> pd.DataFrame:
     
     if isBackAdjusted and max_lookahead == None:
@@ -145,6 +165,7 @@ def get_live_synthetic(
             offset = offset,
             max_lookahead = max_lookahead,
             mode = mode,
+            isTickNEod = isTickNEod,
         )
 
         res_df["days_to_roll"] = res_df.roll_date - res_df.index
