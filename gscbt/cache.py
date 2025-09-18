@@ -109,7 +109,7 @@ class Cache:
             cache_mode == Cache.Mode.market_api or
             (cache_mode == Cache.Mode.hdb_n_market_api and hdb_flag != 1)
         ):
-            path = file_path / Path(filename).with_suffix(".json")
+            json_path = file_path / Path(filename).with_suffix(".json")
             url = API.GET_IQFEED_DATA
             params = {
                 "symbols": ticker.iqfeed_symbol + cache_metadata.symbol_suffix,
@@ -119,10 +119,10 @@ class Cache:
                 "duration": Interval.str_to_second(interval),
             }
 
-            status_code = download_file(url, path, params)
+            status_code = download_file(url, json_path, params)
             if status_code == 200:
-                json_to_parquet(path)
-                remove_file(path)
+                json_to_parquet(json_path)
+                remove_file(json_path)
 
         elif cache_mode == Cache.Mode.direct_iqfeed:
             url = API.DIRECT_IQFEED_APIS
