@@ -1,5 +1,6 @@
-from datetime import date
-
+from readerwriterlock import rwlock
+from datetime import date, datetime, timedelta
+import pytz
 import pandas as pd 
 import json
 
@@ -9,6 +10,19 @@ from gscbt.utils import (
     API,
 )
 
+cache = {}
+rw_lock = rwlock.RWLockFair()
+
+def get_next_market_expiry() -> datetime:
+    ist = pytz.timezone("Asia/Kolkata")
+
+    now = datetime.now(ist)
+    expiry = now.replace(hour=9, minute=15, second=0, microsecond=0)
+
+    if now >= expiry:
+        # If it's already past 9:15 today, set for tomorrow
+        expiry += timedelta(days=1)
+    return expiry
 
 def get_live_data(
     symbol : str,
@@ -17,6 +31,13 @@ def get_live_data(
 
     today = date.today()
     end_date = today.strftime('%Y-%m-%d')
+
+    ist = pytz.timezone("Asia/Kolkata")
+    now = datetime.now(ist)
+    r_lock = rw_lock.gen_rlock()
+    with r_lock:
+        if symbol in cache and now < cache["expiry"]:
+            return True, cache[symbol]
 
     params = {
         "symbols" : symbol,
@@ -47,6 +68,14 @@ def get_live_data(
 
     df.drop(column_drop_list, axis=1, inplace=True)
     df.set_index(["timestamp"], inplace=True)
+
+    w_lock = rw_lock.gen_wlock()
+    with w_lock:
+        if len(cache) == 0 or symbol in cache:
+            cache.clear()
+            cache["expiry"] = get_next_market_expiry()
+
+        cache[symbol] = df
 
     return True, df
 

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="gscbt",
-    version="0.2.3",
+    version="0.2.4",
     author="Priyam",
     description="Data Pipeline for backtesting",
     long_description=open('README.md').read(),
@@ -17,6 +17,8 @@ setup(
         "requests",
         "dotenv",
         "python_calamine",
+        "pytz",
+        "readerwriterlock"
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

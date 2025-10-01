@@ -5,5 +5,6 @@ pyarrow
 requests
 dotenv
 python_calamine
-
+pytz
 pytest
+readerwriterlock
