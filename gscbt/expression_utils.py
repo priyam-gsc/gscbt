@@ -184,7 +184,59 @@ def move_contracts_to_prev_valid_month(
         return moved_contracts
     except:
         raise ValueError(f"[-] DataPipeline.move_contracts_to_prev_valid_month Invalid contract value {contract}")
-   
+
+def move_contracts_to_given_next_month(
+    contracts : list[str],
+    month_map : dict,
+) -> list[str]:
+    try:
+        moved_contracts = []
+        for contract in contracts:
+            sym = contract[:-3]
+            valid_months = month_map[sym].replace("-", "")
+            idx = valid_months.find(contract[-3])
+
+            if idx == -1:
+                raise
+
+            if idx == len(valid_months)-1:
+                new_year = get_full_year(int(contract[-2:])) + 1
+                contract = contract[:-3] + valid_months[0]  + f"{new_year % 100:02}"
+            else:
+                contract = contract[:-3] + valid_months[idx+1] + contract[-2:]
+
+            moved_contracts.append(contract)
+
+        return moved_contracts
+    except:
+        raise ValueError(f"[-] DataPipeline.move_contracts_to_given_next_month Invalid parameters {contract=} and {month_map=}")
+
+def move_contracts_to_given_prev_month(
+    contracts : list[str],
+    month_map : dict,
+) -> list[str]:
+    try:
+        moved_contracts = []
+        for contract in contracts:
+            sym = contract[:-3]
+            valid_months = month_map[sym].replace("-", "")
+            idx = valid_months.find(contract[-3])
+
+            if idx == -1:
+                raise
+
+            if idx == 0:
+                new_year = get_full_year(int(contract[-2:])) - 1
+                contract = contract[:-3] + valid_months[-1]  + f"{new_year%100:02}"
+            else:
+                contract = contract[:-3] + valid_months[idx-1] + contract[-2:]
+
+            moved_contracts.append(contract)
+
+        return moved_contracts
+    except:
+        raise ValueError(f"[-] DataPipeline.move_contracts_to_given_prev_month Invalid parameters {contract=} and {month_map=}")
+
 def move_contract_to_given_next_valid_month(
     contract : str,
     valid_months : str,
