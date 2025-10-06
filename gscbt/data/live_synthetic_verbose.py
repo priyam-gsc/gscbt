@@ -14,7 +14,8 @@ def get_live_synthetic_verbose(
     isBackAdjusted : bool = True,
     roll_method : str = "contractwise",
     max_lookahead : int | None = None,
-    mode : str = "normal"
+    mode : str = "normal",
+    month_map : dict = {}
 ) -> pd.DataFrame:
     
     if isBackAdjusted and max_lookahead == None:
@@ -23,6 +24,12 @@ def get_live_synthetic_verbose(
     processed_contracts = set()
 
     contracts, multipliers = extract_contracts_multipliers(expression)
+
+    itr_months = None
+    instrument = contracts[0][:-3]
+    if instrument in month_map:
+        itr_months = month_map[instrument]
+
     df_list = []
     for i in range(len(contracts)):
         if contracts[i] in processed_contracts:
@@ -42,7 +49,8 @@ def get_live_synthetic_verbose(
             interval = "1d",
             roll_method = roll_method,
             max_lookahead = max_lookahead,
-            mode = mode
+            mode = mode,
+            itr_months = itr_months
         )
         df = df.drop(columns=["roll_date", "days_to_roll"])
         df = df.rename(columns={"close": contracts[i]})
@@ -58,6 +66,7 @@ def get_live_synthetic_verbose(
         roll_method = roll_method,
         max_lookahead = max_lookahead,
         mode = mode,
+        itr_months = itr_months
     )
 
     df_list.append(df)
