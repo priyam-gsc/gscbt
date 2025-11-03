@@ -255,7 +255,7 @@ def get_live_synthetic_spreadwise(
 
     for contract in contracts:
         sym = contract[:-3]
-        month_map[sym] = META[sym][constractMonths]
+        month_map[sym] = META[sym]["contractMonths"]
 
     res_df = get_live_synthetic_custom(
         expression = expression,
