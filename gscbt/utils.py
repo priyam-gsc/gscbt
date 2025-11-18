@@ -56,7 +56,8 @@ class API:
     
     GET_USD_CONVERSION = f"http://{SERVER_IP_PORT}/api/v1/data/dollarequivalent"
     DOWNLOAD_MARKET_DATA = f"http://{SERVER_IP_PORT}/api/v1/data/download"
-    GET_IQFEED_DATA = f"http://{SERVER_IP_PORT}/api/v2/data/iqfeed"
+    # GET_IQFEED_DATA = f"http://{SERVER_IP_PORT}/api/v2/data/iqfeed"
+    GET_IQFEED_DATA = f"http://192.168.0.155:24504/data"
     GET_MARKET_DATA = f"http://{SERVER_IP_PORT}/api/v1/data/ohlcv"
     QUANT_APIS = f"http://{SERVER_IP_PORT}/api/v1/quant/data/ohlcv"
     DIRECT_IQFEED_APIS = f"http://{LOCAL_WIN_DIRECT_IQFEED_IP_PORT}/api/v1/data_parquet/iqfeed"
